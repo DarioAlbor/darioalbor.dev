@@ -59,5 +59,5 @@ $headers = implode("\r\n", [
     'Content-Transfer-Encoding: 8bit',
 ]);
 
-$sent = mail($to, $subject, $body, $headers, '-f<>');
+$sent = mail($to, $subject, $body, $headers, '-f' . $email);
 finish($sent ? 200 : 500, $sent, $lang);
