@@ -1,0 +1,26 @@
+import fs from "node:fs";
+import path from "node:path";
+
+const root = path.resolve(import.meta.dirname, "..");
+const outDir = path.join(root, "out");
+const art = fs.readFileSync(path.join(root, "ascii-art.txt"), "utf8").replace(/\s+$/, "");
+const banner = `<!--\n\n${art}\n\n  darioalbor.dev\n\n-->\n`;
+
+function* htmlFiles(dir) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) yield* htmlFiles(full);
+    else if (entry.name.endsWith(".html")) yield full;
+  }
+}
+
+let count = 0;
+for (const file of htmlFiles(outDir)) {
+  const html = fs.readFileSync(file, "utf8");
+  if (html.includes(banner)) continue;
+  const patched = html.replace(/^(<!DOCTYPE html>)/i, `$1\n${banner}`);
+  if (patched === html) throw new Error(`sin doctype: ${file}`);
+  fs.writeFileSync(file, patched);
+  count++;
+}
+console.log(`ascii-banner: ${count} páginas`);

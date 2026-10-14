@@ -1,0 +1,56 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://darioalbor.dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+      - name: Upload to server
+        env:
+          SFTP_HOST: ${{ secrets.SFTP_HOST }}
+          SFTP_USER: ${{ secrets.SFTP_USER }}
+          SFTP_PATH: ${{ secrets.SFTP_PATH }}
+          SFTP_KEY: ${{ secrets.SFTP_KEY }}
+          SFTP_KNOWN_HOSTS: ${{ secrets.SFTP_KNOWN_HOSTS }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SFTP_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$SFTP_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          lftp -c "
+            set sftp:connect-program 'ssh -a -x -i $HOME/.ssh/deploy_key -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=yes';
+            set net:max-retries 2;
+            open -u $SFTP_USER, sftp://$SFTP_HOST;
+            mirror --reverse --delete --parallel=4 --verbose=1 out/ $SFTP_PATH
+          "
+          rm -f ~/.ssh/deploy_key
+
+      - name: Smoke test
+        run: |
+          for path in / /en/ /es/ /es/cv/ /sitemap.xml; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "https://darioalbor.dev$path")
+            echo "$path $code"
+            [ "$code" = 200 ]
+          done
