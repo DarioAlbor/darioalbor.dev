@@ -192,6 +192,10 @@ form.contact button {
   padding: 0.25rem 1rem;
   cursor: pointer;
 }
+.captcha {
+  min-height: 65px;
+  margin: 0.8rem 0;
+}
 form.contact .hp {
   position: absolute;
   left: -10000px;

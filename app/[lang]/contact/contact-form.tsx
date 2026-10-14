@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import type { Dictionary, Locale } from "@/content/i18n";
+import { site } from "@/content/site";
+import Turnstile from "./turnstile";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -16,6 +18,7 @@ export default function ContactForm({
 }) {
   const [status, setStatus] = useState<Status>("idle");
   const [startedAt] = useState(() => Date.now());
+  const [attempt, setAttempt] = useState(0);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -27,10 +30,15 @@ export default function ContactForm({
         headers: { Accept: "application/json" },
       });
       const data = await res.json().catch(() => ({ ok: false }));
-      setStatus(res.ok && data.ok ? "sent" : "error");
+      if (res.ok && data.ok) {
+        setStatus("sent");
+        return;
+      }
+      setStatus("error");
     } catch {
       setStatus("error");
     }
+    setAttempt((n) => n + 1);
   }
 
   if (status === "sent") return <p>{t.sent}</p>;
@@ -57,6 +65,8 @@ export default function ContactForm({
         {t.message}
         <textarea name="message" required maxLength={5000} rows={7} />
       </label>
+
+      <Turnstile siteKey={site.turnstileSiteKey} lang={lang} resetKey={attempt} />
 
       <p>
         <button type="submit" disabled={status === "sending"}>

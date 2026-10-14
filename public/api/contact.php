@@ -21,6 +21,29 @@ function finish(int $status, bool $ok, string $lang): never
     exit;
 }
 
+function turnstileOk(string $token, string $ip): bool
+{
+    $secretFile = dirname(__DIR__, 2) . '/private/turnstile-secret';
+    if ($token === '' || !is_readable($secretFile)) {
+        return false;
+    }
+    $ch = curl_init('https://challenges.cloudflare.com/turnstile/v0/siteverify');
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => http_build_query([
+            'secret' => trim((string)file_get_contents($secretFile)),
+            'response' => $token,
+            'remoteip' => $ip,
+        ]),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 10,
+    ]);
+    $result = json_decode((string)curl_exec($ch), true);
+    curl_close($ch);
+    return is_array($result) && ($result['success'] ?? false) === true
+        && ($result['hostname'] ?? '') === 'darioalbor.dev';
+}
+
 $lang = ($_POST['lang'] ?? '') === 'en' ? 'en' : 'es';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -42,6 +65,10 @@ if ($name === '' || $message === '' || !filter_var($email, FILTER_VALIDATE_EMAIL
 }
 
 $ip = $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+
+if (!turnstileOk((string)($_POST['cf-turnstile-response'] ?? ''), $ip)) {
+    finish(403, false, $lang);
+}
 $stamp = sys_get_temp_dir() . '/darioalbor-contact-' . hash('sha256', $ip);
 if (is_file($stamp) && time() - (int)filemtime($stamp) < RATE_LIMIT_SECONDS) {
     finish(429, false, $lang);
