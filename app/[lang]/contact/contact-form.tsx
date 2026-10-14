@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { Dictionary, Locale } from "@/content/i18n";
 import { site } from "@/content/site";
 import Turnstile from "./turnstile";
 
-type Status = "idle" | "sending" | "sent" | "error";
+type Toast = { kind: "ok" | "error"; id: number } | null;
+
+const TOAST_MS = 8000;
 
 export default function ContactForm({
   lang,
@@ -16,68 +18,94 @@ export default function ContactForm({
   t: Dictionary["contact"]["form"];
   email: string;
 }) {
-  const [status, setStatus] = useState<Status>("idle");
+  const [sending, setSending] = useState(false);
+  const [toast, setToast] = useState<Toast>(null);
   const [startedAt] = useState(() => Date.now());
   const [attempt, setAttempt] = useState(0);
 
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), TOAST_MS);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setStatus("sending");
+    const form = e.currentTarget;
+    setSending(true);
+    let ok = false;
     try {
-      const res = await fetch(e.currentTarget.action, {
+      const res = await fetch(form.action, {
         method: "POST",
-        body: new FormData(e.currentTarget),
+        body: new FormData(form),
         headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(20000),
       });
       const data = await res.json().catch(() => ({ ok: false }));
-      if (res.ok && data.ok) {
-        setStatus("sent");
-        return;
-      }
-      setStatus("error");
+      ok = res.ok && data.ok === true;
     } catch {
-      setStatus("error");
+      ok = false;
     }
+    if (ok) form.reset();
+    setSending(false);
     setAttempt((n) => n + 1);
+    setToast({ kind: ok ? "ok" : "error", id: Date.now() });
   }
 
-  if (status === "sent") return <p>{t.sent}</p>;
-
   return (
-    <form className="contact" action="/api/contact.php" method="post" onSubmit={onSubmit}>
-      <input type="hidden" name="lang" value={lang} />
-      <input type="hidden" name="t" value={startedAt} />
-      <div className="hp" aria-hidden="true">
+    <>
+      <form className="contact" action="/api/contact.php" method="post" onSubmit={onSubmit}>
+        <input type="hidden" name="lang" value={lang} />
+        <input type="hidden" name="t" value={startedAt} />
+        <div className="hp" aria-hidden="true">
+          <label>
+            Website <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+          </label>
+        </div>
+
         <label>
-          Website <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+          {t.name}
+          <input type="text" name="name" required maxLength={100} autoComplete="name" />
         </label>
-      </div>
+        <label>
+          {t.email}
+          <input type="email" name="email" required maxLength={200} autoComplete="email" />
+        </label>
+        <label>
+          {t.message}
+          <textarea name="message" required maxLength={5000} rows={7} />
+        </label>
 
-      <label>
-        {t.name}
-        <input type="text" name="name" required maxLength={100} autoComplete="name" />
-      </label>
-      <label>
-        {t.email}
-        <input type="email" name="email" required maxLength={200} autoComplete="email" />
-      </label>
-      <label>
-        {t.message}
-        <textarea name="message" required maxLength={5000} rows={7} />
-      </label>
+        <Turnstile siteKey={site.turnstileSiteKey} lang={lang} resetKey={attempt} />
 
-      <Turnstile siteKey={site.turnstileSiteKey} lang={lang} resetKey={attempt} />
-
-      <p>
-        <button type="submit" disabled={status === "sending"}>
-          {status === "sending" ? t.sending : t.send}
-        </button>
-      </p>
-      {status === "error" && (
-        <p className="error">
-          {t.error} <a href={`mailto:${email}`}>{email}</a>.
+        <p>
+          <button type="submit" disabled={sending}>
+            {sending ? t.sending : t.send}
+          </button>
         </p>
-      )}
-    </form>
+      </form>
+
+      <div className="toast-region" aria-live="polite">
+        {toast && (
+          <div key={toast.id} className={`toast toast-${toast.kind}`} role="status">
+            <span className="toast-mark" aria-hidden="true">
+              {toast.kind === "ok" ? "✓" : "✗"}
+            </span>
+            <span>
+              {toast.kind === "ok" ? (
+                t.sent
+              ) : (
+                <>
+                  {t.error} <a href={`mailto:${email}`}>{email}</a>.
+                </>
+              )}
+            </span>
+            <button type="button" className="toast-close" onClick={() => setToast(null)} aria-label={t.close}>
+              ×
+            </button>
+          </div>
+        )}
+      </div>
+    </>
   );
 }

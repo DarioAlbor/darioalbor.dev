@@ -200,7 +200,62 @@ form.contact .hp {
   position: absolute;
   left: -10000px;
 }
-.error { color: #b00020; }
+
+.toast-region {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+  padding: 0 1rem;
+  pointer-events: none;
+  z-index: 10;
+}
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  max-width: 34rem;
+  padding: 0.6rem 0.8rem 0.6rem 0.9rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--toast-accent);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  animation: toast-in 180ms ease-out;
+}
+.toast-ok { --toast-accent: #2e7d32; }
+.toast-error { --toast-accent: #b00020; }
+.toast-mark {
+  font-family: "Courier New", Courier, monospace;
+  font-weight: bold;
+  color: var(--toast-accent);
+}
+.toast-close {
+  margin-left: 0.4rem;
+  padding: 0 0.2rem;
+  font: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.toast-close:hover { color: var(--text); }
 @media (prefers-color-scheme: dark) {
-  .error { color: #ff8a80; }
+  .toast { box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5); }
+  .toast-ok { --toast-accent: #81c784; }
+  .toast-error { --toast-accent: #ff8a80; }
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(0.5rem); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
 }
