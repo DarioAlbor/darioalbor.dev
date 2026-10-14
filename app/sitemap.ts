@@ -21,7 +21,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
       },
     }));
 
+  const root = {
+    url: `${site.url}/`,
+    lastModified: now,
+    priority: 1,
+    alternates: {
+      languages: {
+        ...Object.fromEntries(locales.map((l) => [l, `${site.url}/${l}/`])),
+        "x-default": `${site.url}/`,
+      },
+    },
+  };
+
   const pages = [
+    root,
     ...entry("/", locales, now, 1),
     ...entry("/cv/", locales, now, 0.9),
     ...entry("/writing/", locales, now, 0.7),
