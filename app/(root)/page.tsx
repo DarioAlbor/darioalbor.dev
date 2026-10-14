@@ -8,6 +8,17 @@ export const metadata: Metadata = {
   description: "Darío Albor, AI-first full stack developer. Desarrollador full stack AI-first.",
   alternates: { canonical: "/", languages: { en: "/en/", es: "/es/", "x-default": "/" } },
   robots: { index: true, follow: true },
+  openGraph: {
+    type: "profile",
+    url: "/",
+    siteName: site.name,
+    title: site.name,
+    description: "Darío Albor, AI-first full stack developer. Desarrollador full stack AI-first.",
+    locale: "en_US",
+    alternateLocale: ["es_AR"],
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: site.name }],
+  },
+  twitter: { card: "summary_large_image", title: site.name, images: ["/og.png"] },
 };
 
 const pickLanguage = `(function(){

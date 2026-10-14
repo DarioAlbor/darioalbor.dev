@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCv } from "@/content/cv";
 import { getDictionary, type Locale } from "@/content/i18n";
+import { site } from "@/content/site";
+import JsonLd from "@/components/json-ld";
 import { pageMetadata } from "@/lib/seo";
 
 export const dynamicParams = false;
@@ -30,8 +32,19 @@ export default async function JobPage({ params }: PageProps<"/[lang]/work/[slug]
   const t = getDictionary(lang as Locale);
   const job = findJob(lang, slug);
 
+  const breadcrumbs = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: site.name, item: `${site.url}/${lang}/` },
+      { "@type": "ListItem", position: 2, name: "CV", item: `${site.url}/${lang}/cv/` },
+      { "@type": "ListItem", position: 3, name: job.company, item: `${site.url}/${lang}/work/${slug}/` },
+    ],
+  };
+
   return (
     <article className="job">
+      <JsonLd data={breadcrumbs} />
       <h1>{job.company}</h1>
       <p className="muted">
         {job.role} · {job.dates}

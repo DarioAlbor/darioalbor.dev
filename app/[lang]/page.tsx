@@ -9,7 +9,8 @@ import { pageMetadata } from "@/lib/seo";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]">): Promise<Metadata> {
   const lang = (await params).lang as Locale;
-  return pageMetadata({ lang, path: "/", description: getDictionary(lang).meta.home, type: "profile" });
+  const t = getDictionary(lang);
+  return pageMetadata({ lang, path: "/", absoluteTitle: t.meta.title, description: t.meta.home, type: "profile" });
 }
 
 export default async function Home({ params }: PageProps<"/[lang]">) {
@@ -19,8 +20,8 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   const posts = getPosts(lang).slice(0, 5);
 
   const person = {
-    "@context": "https://schema.org",
     "@type": "Person",
+    "@id": `${site.url}/#person`,
     name: site.name,
     url: `${site.url}/${lang}/`,
     image: `${site.url}/og.png`,
@@ -34,9 +35,32 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
     sameAs: [site.github, site.linkedin],
   };
 
+  const graph = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": `${site.url}/#website`,
+        url: `${site.url}/`,
+        name: site.name,
+        inLanguage: ["en", "es"],
+        publisher: { "@id": `${site.url}/#person` },
+      },
+      {
+        "@type": "ProfilePage",
+        url: `${site.url}/${lang}/`,
+        name: t.meta.title,
+        inLanguage: lang,
+        isPartOf: { "@id": `${site.url}/#website` },
+        mainEntity: person,
+      },
+    ],
+  };
+
   return (
     <>
-      <JsonLd data={person} />
+      <JsonLd data={graph} />
+      <h1 className="sr-only">{t.meta.title}</h1>
       {t.home.intro.map((p) => (
         <p key={p}>{p}</p>
       ))}

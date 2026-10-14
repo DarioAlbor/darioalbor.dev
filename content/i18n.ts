@@ -11,11 +11,12 @@ const en = {
   email: "hi@darioalbor.dev",
   nav: { home: "home", writing: "writing", projects: "projects", cv: "cv", contact: "contact" },
   meta: {
+    title: "Darío Albor — AI-first full stack developer",
     home: "Darío Albor, AI-first full stack developer in Buenos Aires. Software architecture, NestJS, Next.js and the servers they run on.",
     writing: "Posts by Darío Albor about software, architecture and the tools he uses every day.",
-    projects: "Projects by Darío Albor.",
+    projects: "Side projects by Darío Albor, AI-first full stack developer in Buenos Aires.",
     cv: "CV of Darío Albor: full stack developer with 5+ years of experience in capital markets, insurance, cloud services and pharma.",
-    contact: "Get in touch with Darío Albor.",
+    contact: "Get in touch with Darío Albor, AI-first full stack developer in Buenos Aires: email, contact form, GitHub and LinkedIn.",
   },
   home: {
     intro: [
@@ -72,11 +73,12 @@ const es: Dictionary = {
   email: "hola@darioalbor.dev",
   nav: { home: "inicio", writing: "posts", projects: "proyectos", cv: "cv", contact: "contacto" },
   meta: {
+    title: "Darío Albor — Desarrollador full stack AI-first",
     home: "Darío Albor, desarrollador full stack AI-first en Buenos Aires. Arquitectura de software, NestJS, Next.js y los servidores donde corren.",
     writing: "Posts de Darío Albor sobre software, arquitectura y las herramientas que usa todos los días.",
-    projects: "Proyectos de Darío Albor.",
+    projects: "Proyectos personales de Darío Albor, desarrollador full stack AI-first en Buenos Aires.",
     cv: "CV de Darío Albor: desarrollador full stack con más de 5 años de experiencia en mercado de capitales, seguros, servicios cloud y el sector farmacéutico.",
-    contact: "Contacto con Darío Albor.",
+    contact: "Contacto con Darío Albor, desarrollador full stack AI-first en Buenos Aires: correo, formulario, GitHub y LinkedIn.",
   },
   home: {
     intro: [

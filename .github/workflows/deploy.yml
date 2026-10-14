@@ -54,3 +54,11 @@ jobs:
             echo "$path $code"
             [ "$code" = 200 ]
           done
+
+      - name: Notify IndexNow
+        run: |
+          key=$(basename "$(ls public/*.txt | grep -E '/[0-9a-f]{32}\.txt$')" .txt)
+          urls=$(grep -oP '(?<=<loc>)[^<]+' out/sitemap.xml | jq -R . | jq -sc .)
+          jq -n --arg key "$key" --argjson urls "$urls" \
+            '{host: "darioalbor.dev", key: $key, keyLocation: "https://darioalbor.dev/\($key).txt", urlList: $urls}' \
+            | curl -s -o /dev/null -w 'indexnow %{http_code}\n' -H 'Content-Type: application/json; charset=utf-8' --data-binary @- https://api.indexnow.org/indexnow

@@ -6,6 +6,7 @@ export function pageMetadata({
   lang,
   path,
   title,
+  absoluteTitle,
   description,
   type = "website",
   langs = locales,
@@ -14,6 +15,7 @@ export function pageMetadata({
   lang: Locale;
   path: string;
   title?: string;
+  absoluteTitle?: string;
   description: string;
   type?: "website" | "article" | "profile";
   langs?: readonly Locale[];
@@ -23,10 +25,10 @@ export function pageMetadata({
   const url = `/${lang}${path}`;
   const languages: Record<string, string> = Object.fromEntries(langs.map((l) => [l, `/${l}${path}`]));
   languages["x-default"] = path === "/" ? "/" : languages.en ?? url;
-  const fullTitle = title ? `${title} — ${site.name}` : site.name;
+  const fullTitle = absoluteTitle ?? (title ? `${title} — ${site.name}` : site.name);
 
   return {
-    ...(title ? { title } : {}),
+    ...(absoluteTitle ? { title: { absolute: absoluteTitle } } : title ? { title } : {}),
     description,
     alternates: { canonical: url, languages },
     openGraph: {
