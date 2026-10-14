@@ -25,6 +25,8 @@ function turnstileOk(string $token, string $ip): bool
 {
     $secretFile = dirname(__DIR__, 2) . '/private/turnstile-secret';
     if ($token === '' || !is_readable($secretFile)) {
+        file_put_contents(dirname(__DIR__, 2) . '/private/turnstile-debug.log', date('c') . ' empty token or unreadable secret: ' . (is_readable($secretFile) ? 'secret ok' : 'secret missing') . "
+", FILE_APPEND);
         return false;
     }
     $ch = curl_init('https://challenges.cloudflare.com/turnstile/v0/siteverify');
@@ -40,6 +42,8 @@ function turnstileOk(string $token, string $ip): bool
     ]);
     $result = json_decode((string)curl_exec($ch), true);
     curl_close($ch);
+    file_put_contents(dirname(__DIR__, 2) . '/private/turnstile-debug.log', date('c') . ' len=' . strlen($token) . ' ' . json_encode($result) . "
+", FILE_APPEND);
     return is_array($result) && ($result['success'] ?? false) === true
         && ($result['hostname'] ?? '') === 'darioalbor.dev';
 }
