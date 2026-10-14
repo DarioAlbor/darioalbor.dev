@@ -50,6 +50,11 @@ const en = {
       sending: "Sending…",
       sent: "Thanks! Your message is on its way. I'll reply to the email you left.",
       error: "Something went wrong and the message wasn't sent. You can write to me directly at",
+      errors: {
+        captcha: "Please wait for the captcha check to finish and try again.",
+        rate: "You just sent a message. Please wait a minute before sending another one.",
+        invalid: "Please check the fields: your name, a valid email and a message.",
+      },
       close: "Close",
     },
     email: "Email",
@@ -106,6 +111,11 @@ const es: Dictionary = {
       sending: "Enviando…",
       sent: "¡Gracias! Tu mensaje ya está en camino. Te respondo al correo que dejaste.",
       error: "Algo falló y el mensaje no se envió. Podés escribirme directo a",
+      errors: {
+        captcha: "Esperá a que termine la verificación del captcha y volvé a intentar.",
+        rate: "Acabás de enviar un mensaje. Esperá un minuto antes de mandar otro.",
+        invalid: "Revisá los campos: tu nombre, un correo válido y el mensaje.",
+      },
       close: "Cerrar",
     },
     email: "Correo",

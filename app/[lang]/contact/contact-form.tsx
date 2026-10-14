@@ -5,7 +5,8 @@ import type { Dictionary, Locale } from "@/content/i18n";
 import { site } from "@/content/site";
 import Turnstile from "./turnstile";
 
-type Toast = { kind: "ok" | "error"; id: number } | null;
+type Reason = "captcha" | "rate" | "invalid" | "server";
+type Toast = { kind: "ok" } | { kind: "error"; reason: Reason };
 
 const TOAST_MS = 8000;
 
@@ -19,7 +20,7 @@ export default function ContactForm({
   email: string;
 }) {
   const [sending, setSending] = useState(false);
-  const [toast, setToast] = useState<Toast>(null);
+  const [toast, setToast] = useState<(Toast & { id: number }) | null>(null);
   const [startedAt] = useState(() => Date.now());
   const [attempt, setAttempt] = useState(0);
 
@@ -32,24 +33,32 @@ export default function ContactForm({
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
+    const body = new FormData(form);
+    if (!body.get("cf-turnstile-response")) {
+      setToast({ kind: "error", reason: "captcha", id: Date.now() });
+      return;
+    }
     setSending(true);
-    let ok = false;
+    let result: Toast;
     try {
       const res = await fetch(form.action, {
         method: "POST",
-        body: new FormData(form),
+        body,
         headers: { Accept: "application/json" },
         signal: AbortSignal.timeout(20000),
       });
       const data = await res.json().catch(() => ({ ok: false }));
-      ok = res.ok && data.ok === true;
+      result =
+        res.ok && data.ok === true
+          ? { kind: "ok" }
+          : { kind: "error", reason: ["captcha", "rate", "invalid"].includes(data.error) ? data.error : "server" };
     } catch {
-      ok = false;
+      result = { kind: "error", reason: "server" };
     }
-    if (ok) form.reset();
+    if (result.kind === "ok") form.reset();
     setSending(false);
     setAttempt((n) => n + 1);
-    setToast({ kind: ok ? "ok" : "error", id: Date.now() });
+    setToast({ ...result, id: Date.now() });
   }
 
   return (
@@ -59,7 +68,7 @@ export default function ContactForm({
         <input type="hidden" name="t" value={startedAt} />
         <div className="hp" aria-hidden="true">
           <label>
-            Website <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+            Leave empty <input type="text" name="hp_extra" tabIndex={-1} autoComplete="off" />
           </label>
         </div>
 
@@ -94,10 +103,12 @@ export default function ContactForm({
             <span>
               {toast.kind === "ok" ? (
                 t.sent
-              ) : (
+              ) : toast.reason === "server" ? (
                 <>
                   {t.error} <a href={`mailto:${email}`}>{email}</a>.
                 </>
+              ) : (
+                t.errors[toast.reason]
               )}
             </span>
             <button type="button" className="toast-close" onClick={() => setToast(null)} aria-label={t.close}>
