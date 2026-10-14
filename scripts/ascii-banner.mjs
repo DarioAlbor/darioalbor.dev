@@ -56,7 +56,7 @@ const art = `
   -------------------------                                               ------           -------
    ----------------------                                                                 ------
      ----------------                                                                     ----`;
-const banner = `<!--\n\n${art}\n\n  darioalbor.dev\n\n-->\n`;
+const banner = `<!--\n${art}\n\n  darioalbor.dev\n\n-->\n`;
 
 function* htmlFiles(dir) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
